@@ -6,8 +6,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-//including stb_image.h to handle several file formats for texture mapping
+//Made the shader function dynamic to load multiple vertex shader at the same timeby creating a shader_m.h header file
+#include "shader_m.h"
 
+//including stb_image.h to handle several file formats for texture mapping
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -16,12 +18,17 @@ using namespace glm;
 #include <iostream>
 #include <vector>
 #include <string>
+#include <filesystem>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+//final project code
+//cube mapping function calls
+unsigned int loadTexture(const char *path);
+unsigned int loadCubemap(std::vector<std::string> faces);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -29,8 +36,8 @@ const unsigned int SCR_HEIGHT = 600;
 
 //camera position
 // camera
-glm::vec3 cameraPos   = glm::vec3(4.0f, 3.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(-4.0f, -3.0f, -3.0f);
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.3f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
 
 //rotation angle
@@ -46,35 +53,13 @@ float z = 1.0;
 bool firstMouse = true;
 float yaw   = -90.0f;
 float pitch =  0.0f;
-float lastX =  800.0f / 2.0;
-float lastY =  600.0 / 2.0;
+float lastX = (float)SCR_WIDTH / 2.0;
+float lastY = (float)SCR_HEIGHT / 2.0;
 float fov   =  45.0f;
 
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
-/* copy a shader from a plain text file into a character array */
-bool file_to_string( const char* fn, char* shader_string, int length ) {
-  FILE* file = fopen( fn, "r" );
-  if ( !file ) {
-    //gl_log_err( "eror while opening file %s\n", fn );
-    return false;
-  }
-  size_t count = fread( shader_string, 1, length - 1, file );
-  if ( (int)count >= length - 1 ) {
-      //gl_log_err( "warning: file too big\n", fn );
-      
-  }
-  if ( ferror( file ) ) {
-    //gl_log_err( "ERROR: reading shader file %s\n", fn );
-    fclose( file );
-    return false;
-  }
-    shader_string[count] = 0;
-  fclose( file );
-  return true;
-}
 
 //to load .obj file
 bool loadObjectFile(
@@ -164,28 +149,11 @@ bool loadObjectFile(
     fclose(file);
     return true;
 }
-//Assignment code
+
 
 int main()
 {
-    //take user input to select the type of shader and the the .obj file to load
-    int inputShader;
-    int objType;
-    
-    std::cout << "Select one of the following shaders\n";
-    std::cout << "Enter 1 for Phong Shader\n";
-    std::cout << "Enter 2 for Gouraud Shader\n";
-    std::cout << "Enter 3 for z-buffer (depth testing)\n";
-    std::cout << "Enter 4 general shader\n";
-    std::cout << "Enter 5 for texture shader\n";
-    std:: cin >> inputShader;
-    
-    std::cout << "Select one of the following objects\n";
-    std::cout << "Enter 7 for cube\n";
-    std::cout << "Enter 8 for cylinder\n";
-    std::cout << "Enter 9 for monkey\n";
-    std:: cin >> objType;
-    
+
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -199,7 +167,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Assignment2", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "The Swamp", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -227,134 +195,19 @@ int main()
     //Enable depth test
     glEnable(GL_DEPTH_TEST);
     
-    //read vertex and fragment shaders
-    char ver_shader[1024 * 256];
-    char fra_shader[1024 * 256];
-    const GLchar* s;
-    
-    switch(inputShader)
-    {
-        case 1:
-        {
-            file_to_string( "PhongVertexShader.vs", ver_shader, 1024 * 256 );
-            file_to_string( "PhongFragmentShader.fs", fra_shader, 1024 * 256);
-            break;
-        }
-        case 2:
-        {
-            file_to_string( "GouraudVertexShader.vs", ver_shader, 1024 * 256 );
-            file_to_string( "GouraudFragmentShader.fs", fra_shader, 1024 * 256);
-            break;
-        }
-        case 3:
-        {
-            file_to_string( "DTVertexShader.vs", ver_shader, 1024 * 256 );
-            file_to_string( "DTFragmentShader.fs", fra_shader, 1024 * 256);
-            break;
-        }
-        case 4:
-        {
-            file_to_string( "VertexShader.vs", ver_shader, 1024 * 256 );
-            file_to_string( "FragmentShader.fs", fra_shader, 1024 * 256);
-            break;
-        }
-        case 5:
-        {
-            file_to_string( "TextureVertexShader.vs", ver_shader, 1024 * 256 );
-            file_to_string( "TextureFragmentShader.fs", fra_shader, 1024 * 256);
-            break;
-        }
-        default:
-        {
-            std::cout << "Invalid input\n";
-            //this is the comoon shader for the object
-            file_to_string( "PhongVertexShader.vs", ver_shader, 1024 * 256 );
-            file_to_string( "PhongFragmentShader.fs", fra_shader, 1024 * 256);
-            
-        }
-    }
-
     // build and compile our shader program
     // ------------------------------------
-    
-    // vertex shader
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    s  = (const GLchar*)ver_shader;
-    glShaderSource(vertexShader, 1, &s, NULL);
-    glCompileShader(vertexShader);
-    // check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-    
-    // fragment shader
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    s  = (const GLchar*)fra_shader;
-    glShaderSource(fragmentShader, 1, &s, NULL);
-    glCompileShader(fragmentShader);
-    // check for shader compile errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-    
-    // link shaders
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-
-    glBindAttribLocation(shaderProgram, 0, "aPos");
-    glBindAttribLocation(shaderProgram, 1, "vertex_colour");
-    glBindAttribLocation(shaderProgram, 2, "aNormal");
-    glBindAttribLocation(shaderProgram, 3, "aTexCoord");
-
-    glLinkProgram(shaderProgram);
-    
-    // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-    
-    int lightPos_location = glGetUniformLocation(shaderProgram, "lightPos" );
-    int lightColor_location =glGetUniformLocation(shaderProgram,"lightColor" );
-    int model_location = glGetUniformLocation( shaderProgram, "model" );
-    int view_location = glGetUniformLocation( shaderProgram, "view" );
-    int projection_location = glGetUniformLocation( shaderProgram, "projection" );
-    glUseProgram( shaderProgram );
+    //shaders for skybox, environmentmapping, texturemapping and blending.
+    Shader skyboxShader("SkyboxVertexShader.vs", "SkyboxFragmentShader.fs");
+    Shader objone_shader("EnvironmentVertexShader.vs", "EnvironmentFragmentShader.fs");
+    Shader texture_shader("TextureVertexShader.vs", "TextureFragmentShader.fs");
+    Shader grass_shader("BlendVertexShader.vs", "BlendFragmentShader.fs");
 
     
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-
     
-    unsigned int indices[] = {  // note that we start from 0!
-        5,1,4,
-        5,4,8,
-        3,7,8,
-        3,8,4,
-        2,6,3,
-        6,7,3,
-        1,5,2,
-        5,6,2,
-        5,8,6,
-        8,7,6,
-        1,2,3,
-        1,3,4
-    };
-     
-    
+    //not used in current project
     float colours[] = {
         //1st triangle
       0.4f, 0.0f,  0.0f,
@@ -363,40 +216,74 @@ int main()
 
     };
     
-    // Read our .obj file
+    //vertices for ground
+    float planeVertices[] = {
+    // positions          // texture Coords
+     5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+    -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+    -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+     5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+    -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+     5.0f, -0.5f, -5.0f,  2.0f, 2.0f
+        };
+    
+    // load skybox .obj file
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
-    std::vector<glm::vec3> normals; // Won't be used at the moment.
+    std::vector<glm::vec3> normals;
+    bool res = loadObjectFile("Skybox.obj", vertices, uvs, normals);
     
-    switch(objType)
+    // load object one (small cube in our project)
+    std::vector<glm::vec3> vertices_objone;
+    std::vector<glm::vec2> uvs_objone;
+    std::vector<glm::vec3> normals_objone;
+    res = loadObjectFile("seperatetriangles.obj", vertices_objone, uvs_objone, normals_objone);
+    
+    //load one cube face for attaching grass to perform blending
+    std::vector<glm::vec3> vertices_cubeface;
+    std::vector<glm::vec2> uvs_cubeface;
+    std::vector<glm::vec3> normals_cubeface;
+    res = loadObjectFile("CubeFace.obj", vertices_cubeface, uvs_cubeface, normals_cubeface);
+    
+    //load rectangle plane for attaching alligator for blending
+    std::vector<glm::vec3> vertices_rectangle;
+    std::vector<glm::vec2> uvs_rectangle;
+    std::vector<glm::vec3> normals_rectangle;
+    res = loadObjectFile("alligatorplane.obj", vertices_rectangle, uvs_rectangle, normals_rectangle);
+    
+    
+    // generate a large list of semi-random model transformation matrices for placing grass at different positions
+    // ------------------------------------------------------------------
+    unsigned int amount = 500;
+    glm::mat4* modelMatrices;
+    modelMatrices = new glm::mat4[amount];
+    srand(glfwGetTime()); // initialize random seed
+    float offset = 4.5f;
+    for (unsigned int i = 0; i < amount; i++)
     {
-        case 7:
-        {
-            bool res = loadObjectFile("seperatetriangles.obj", vertices, uvs, normals);
-            break;
-        }
-        case 8:
-        {
-            bool res = loadObjectFile("cylinder.obj", vertices, uvs, normals);
-            break;
-        }
-        case 9:
-        {
-            bool res = loadObjectFile("monkey.obj", vertices, uvs, normals);
-            break;
-        }
-        default:
-        {
-            std::cout << "Invalid input\n";
-            bool res = loadObjectFile("cylinder.obj", vertices, uvs, normals);
-            break;
-        }
+        glm::mat4 model = glm::mat4(1.0f);
+        // 1. translation: displace along circle with 'radius' in range [-offset, offset]
+        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float x = displacement;
+        float y = 0.0;
+        float z = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;;
+        //float z = 0.0;
+        model = glm::translate(model, glm::vec3(x, y, z));
+
+        // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+        float rotAngle = (rand() % 360);
+        model = glm::rotate(model, rotAngle, glm::vec3(0.f, 0.6f, 0.0f));
+        //model = glm::rotate(model, rotAngle, glm::vec3(cameraPos));
+
+        // 4. now add to list of matrices
+        modelMatrices[i] = model;
     }
     
-    unsigned int EBO;
-    glGenBuffers(1, &EBO);
     
-    //VBOs for vertices, colors and normals
+    
+    //VBOs for vertices, colors and normals for skybox
+    //----------------------------------------------------------
     unsigned int VBO_points;
     glGenBuffers(1, &VBO_points);
     glBindBuffer(GL_ARRAY_BUFFER, VBO_points);
@@ -407,7 +294,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO_colours);
     glBufferData(GL_ARRAY_BUFFER, sizeof(colours), colours, GL_STATIC_DRAW);
     
-    //normals for lighting (phong and gouraud
+    //normals for lighting
     unsigned int VBO_normals;
     glGenBuffers(1, &VBO_normals);
     glBindBuffer(GL_ARRAY_BUFFER, VBO_normals);
@@ -419,56 +306,157 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO_texture);
     glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec3), &uvs[0], GL_STATIC_DRAW);
     
+    //VBOs for vertices, colors and normals for object one (cube for skymap)
+    //----------------------------------------------------------------
+    unsigned int VBO_points_objone;
+    glGenBuffers(1, &VBO_points_objone);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_points_objone);
+    glBufferData(GL_ARRAY_BUFFER, vertices_objone.size() * sizeof(glm::vec3), &vertices_objone[0], GL_STATIC_DRAW);
+    
+    unsigned int VBO_colours_objone;
+    glGenBuffers(1, &VBO_colours_objone);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_colours_objone);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(colours), colours, GL_STATIC_DRAW);
+    
+    //normals for lighting
+    unsigned int VBO_normals_objone;
+    glGenBuffers(1, &VBO_normals_objone);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_normals_objone);
+    glBufferData(GL_ARRAY_BUFFER, normals_objone.size() * sizeof(glm::vec3), &normals_objone[0], GL_STATIC_DRAW);
+    
+    //vbo for texture
+    unsigned int VBO_texture_objone;
+    glGenBuffers(1, &VBO_texture_objone);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_texture_objone);
+    glBufferData(GL_ARRAY_BUFFER, uvs_objone.size() * sizeof(glm::vec3), &uvs_objone[0], GL_STATIC_DRAW);
+    
 
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    //the VAO is for skybox
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, VBO_points);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glBindBuffer(GL_ARRAY_BUFFER, VBO_colours);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glBindBuffer(GL_ARRAY_BUFFER, VBO_normals);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    // texture coord attribute
     glBindBuffer(GL_ARRAY_BUFFER, VBO_texture);
     glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-    
-
-    // load and create a texture
-    // -------------------------
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
-    // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);    // set texture wrapping to GL_REPEAT (default wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // load image, create texture and generate mipmaps
-    int width, height, nrChannels;
-    // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
-    unsigned char *data =
-    stbi_load("/Users/sheelaippili/Desktop/Assignment3_deliverable/Assignment3/Gator.jpg", &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
     
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
     glEnableVertexAttribArray(3);
+    
+    //the VAO is for object one
+    unsigned int VAO_objone;
+    glGenVertexArrays(1, &VAO_objone);
+    glBindVertexArray(VAO_objone);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_points_objone);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_colours_objone);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_normals_objone);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_texture_objone);
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
+    
+    // plane VAO
+    unsigned int planeVAO, planeVBO;
+    glGenVertexArrays(1, &planeVAO);
+    glGenBuffers(1, &planeVBO);
+    glBindVertexArray(planeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    
+    
+    //VBOs for vertices, colors and normals for grass
+    //----------------------------------------------------------
+    unsigned int transparentVAO;
+    glGenVertexArrays(1, &transparentVAO);
+    
+    unsigned int VBO_points_cubeface;
+    glGenBuffers(1, &VBO_points_cubeface);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_points_cubeface);
+    glBufferData(GL_ARRAY_BUFFER, vertices_cubeface.size() * sizeof(glm::vec3), &vertices_cubeface[0], GL_STATIC_DRAW);
+    
+    //vbo for texture
+    unsigned int VBO_texture_cubeface;
+    glGenBuffers(1, &VBO_texture_cubeface);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_texture_cubeface);
+    glBufferData(GL_ARRAY_BUFFER, uvs_cubeface.size() * sizeof(glm::vec3), &uvs_cubeface[0], GL_STATIC_DRAW);
+    
+    //the VAO is for transparency of grass
+    glBindVertexArray(transparentVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_points_cubeface);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_texture_cubeface);
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(3);
+    
+    
+    //VBOs for vertices, colors and normals for alligator
+    //----------------------------------------------------------
+    unsigned int rectangleVAO;
+    glGenVertexArrays(1, &rectangleVAO);
+    
+    unsigned int VBO_points_rectangleface;
+    glGenBuffers(1, &VBO_points_rectangleface);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_points_rectangleface);
+    glBufferData(GL_ARRAY_BUFFER, vertices_rectangle.size() * sizeof(glm::vec3), &vertices_rectangle[0], GL_STATIC_DRAW);
+    
+    //vbo for texture
+    unsigned int VBO_texture_rectangleface;
+    glGenBuffers(1, &VBO_texture_rectangleface);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_texture_rectangleface);
+    glBufferData(GL_ARRAY_BUFFER, uvs_rectangle.size() * sizeof(glm::vec3), &uvs_rectangle[0], GL_STATIC_DRAW);
+    
+    //the VAO is for transparency of grass
+    glBindVertexArray(rectangleVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_points_rectangleface);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_texture_rectangleface);
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(3);
+
+    
+    //path for regular texture
+    unsigned int Texture_objone = loadTexture("Gator.jpg");
+    
+    //path for loading texture of swamp
+    unsigned int floorTexture = loadTexture("Ground_Soil.png");
+    
+    //path for loading grass
+    unsigned int transparentTexture = loadTexture("Grass_new.png");
+    
+    //path for loading alligator
+    unsigned int alligatorTexture = loadTexture("alligator transparent background.png");
+    
+    
+    //path for cube map
+    std::vector<std::string> faces;
+    faces.push_back("skybox/right.jpg");
+    faces.push_back("skybox/left.jpg");
+    faces.push_back("skybox/top.jpg");
+    faces.push_back("skybox/bottom.jpg");
+    faces.push_back("skybox/front.jpg");
+    faces.push_back("skybox/back.jpg");
+    unsigned int cubemapTexture = loadCubemap(faces);
+    
     
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -480,6 +468,20 @@ int main()
     // uncomment this call to draw in wireframe polygons.
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    //use the shader here
+    skyboxShader.use();
+    skyboxShader.setInt("skybox", 0);
+    
+    objone_shader.use();
+    objone_shader.setInt("skybox", 0);
+    
+    texture_shader.use();
+    texture_shader.setInt("ourTexture", 0);
+    
+    grass_shader.use();
+    grass_shader.setInt("ourTexture", 0);
+    
+    
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -498,50 +500,84 @@ int main()
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        // bind Texture
-        glBindTexture(GL_TEXTURE_2D, texture);
 
-        // draw our first triangle
-        glUseProgram(shaderProgram);
-        
         // lighting position nd color
         glm::vec3 lightPos(4.0f, 3.0f, 3.0f);
         glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
-
         
-        // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+        //project, view and model (translate, rotate and scale) matrix
         glm::mat4 projection = glm::perspective(glm::radians(fov), (float) SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-          
-        // Or, for an ortho camera :
-        //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
-        
         glm::mat4 view = glm::lookAt(cameraPos,cameraPos+cameraFront,cameraUp);
         glm::mat4 model = glm::mat4(1.0f);
-        //rotating the matrix along Z-Axis
-        model = glm::rotate(model, glm::radians(rotationAngleZ), glm::vec3(0.0, 0.0, 1.0));
-        model = glm::rotate(model, glm::radians(rotationAngleY), glm::vec3(0.0, 1.0, 0.0));
-        //Scaling the cube
+        model = glm::translate(model, glm::vec3(0.0, 0.0, 6.5));
         model = glm::scale(model, glm::vec3(x, y, z));
-        //glm::mat4 mvp = projection * view * model;
         
-        //Assignment 3 - Model view transformation - code start
-        glUniformMatrix4fv( projection_location, 1, GL_FALSE, &projection[0][0]);
-        glUniformMatrix4fv( view_location, 1, GL_FALSE, &view[0][0]);
-        glUniformMatrix4fv( model_location, 1, GL_FALSE, &model[0][0]);
-        glUniform3fv( lightPos_location, 1, &lightPos[0] );
-        glUniform3fv( lightColor_location, 1, &lightColor[0]);
-        //Assignment 3 - Model view transformation - code end
+        //draw cube for environment mapping
+        objone_shader.use();
+        objone_shader.setMat4("model", model);
+        objone_shader.setMat4("view", view);
+        objone_shader.setMat4("projection", projection);
+        objone_shader.setVec3("cameraPos", cameraPos);
+        glBindVertexArray(VAO_objone);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, Texture_objone);
+        glDrawArrays(GL_TRIANGLES, 0, vertices_objone.size());
+        glDepthMask(GL_TRUE);
+        glBindVertexArray(0);
         
-        glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         
-        //if VBO
-        //glDrawArrays(GL_TRIANGLES, 0, numVertices);
-        //if .obj file
+        //draw plane
+        texture_shader.use();
+        model = glm::mat4(1.0f);
+        texture_shader.setMat4("model", model);
+        texture_shader.setMat4("view", view);
+        texture_shader.setMat4("projection", projection);
+        glBindVertexArray(planeVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDepthMask(GL_TRUE);
+        glBindVertexArray(0);
+        
+        //Draw grass
+        grass_shader.use();
+        glBindVertexArray(transparentVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        for(unsigned int i = 0; i < amount; i++)
+        {
+            grass_shader.setMat4("model", modelMatrices[i]);
+            grass_shader.setMat4("view", view);
+            grass_shader.setMat4("projection", projection);
+            glDrawArrays(GL_TRIANGLES, 0, vertices_cubeface.size());
+        }
+        
+        //draw alligator
+        grass_shader.use();
+        glBindVertexArray(rectangleVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, alligatorTexture);
+        model = glm::mat4(1.0f);
+        grass_shader.setMat4("model", model);
+        grass_shader.setMat4("view", view);
+        grass_shader.setMat4("projection", projection);
+        glDrawArrays(GL_TRIANGLES, 0, vertices_rectangle.size());
+        
+        //draw skybox
+        skyboxShader.use();
+        model = glm::mat4(1.0f);
+        //model = glm::translate(model, glm::vec3(0.0, 0.0, 6.5));
+        model = glm::translate(model, glm::vec3(cameraPos.x, cameraPos.y, cameraPos.z));
+        skyboxShader.setMat4("model", model);
+        skyboxShader.setMat4("view", view);
+        skyboxShader.setMat4("projection", projection);
+        glBindVertexArray(VAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-        //if EBO
-        //glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, 0);
-         glBindVertexArray(0); // no need to unbind it every time
+        glDepthMask(GL_TRUE);
+        glBindVertexArray(0); // no need to unbind it every time
+        
  
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -554,7 +590,6 @@ int main()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO_points);
     glDeleteBuffers(1, &VBO_colours);
-    glDeleteProgram(shaderProgram);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
@@ -569,26 +604,57 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     
-    // to scale the cube up, down, move the object left, right up and down
+    // making the scene dynamic
     float cameraSpeed = -0.05f;
     
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            cameraPos += cameraUp * cameraSpeed;
+        {
+            if (cameraPos[1] <=0.0 && cameraFront[1] <=0)
+            {
+                cameraPos[1] += 0.1;
+            }
+            else
+            {
+            cameraPos -= cameraSpeed * cameraFront;
+            }
+        }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            cameraPos -= cameraUp * cameraSpeed;
+        {
+            if (cameraPos[1] <=0.0 && cameraFront[1] >= 0)
+            {
+                cameraPos[1] += 0.1;
+            }
+            else
+            {
+                cameraPos += cameraSpeed * cameraFront;
+            }
+        }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        {
+            
             cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+            
+        }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        {
+            
             cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+            
+        }
+    
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+            cameraPos += cameraUp * cameraSpeed;
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            cameraPos -= cameraUp * cameraSpeed;
     
         //scale the object by 0.1 along x,y, and z axis
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
         {
             x += 0.1;
             y += 0.1;
             z += 0.1;
         }
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
         {
             x -= 0.1;
             y -= 0.1;
@@ -597,15 +663,15 @@ void processInput(GLFWwindow *window)
 
     
     //to rotate the object by an angle of 10 radians along z axis
-        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+        //if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
             rotationAngleZ = rotationAngleZ + 10;
-        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
+        //if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
             rotationAngleZ = rotationAngleZ - 10;
     
     //to rotate the object by an angle of 10 radians along x axis
-        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+        //if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
             rotationAngleY = rotationAngleY + 10;
-        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        //if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
             rotationAngleY = rotationAngleY - 10;
         
 }
@@ -664,8 +730,9 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     if (fov > 45.0f)
         fov = 45.0f;
 }
-// to rotate the object using mouse left and right bitton clicks
 
+// to rotate the object using mouse left and right bitton clicks
+// -------------------------
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
@@ -674,6 +741,84 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         rotationAngleZ -= 3;
 }
 
+//function to load and create a texture
+// -------------------------
+unsigned int loadTexture(char const * path)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
+}
+
+//function to load and create a cube map texture
+//order of textures
+// +X (right)
+// -X (left)
+// +Y (top)
+// -Y (bottom)
+// +Z (front)
+// -Z (back)
+// -------------------------------------------------------
+// -------------------------
+unsigned int loadCubemap(std::vector<std::string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    return textureID;
+}
 
 
 

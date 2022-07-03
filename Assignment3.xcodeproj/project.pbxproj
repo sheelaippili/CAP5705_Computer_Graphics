@@ -7,12 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0C9C59232748470C00A5BECC /* TextureVertexShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C9C59222748470C00A5BECC /* TextureVertexShader.cpp */; };
-		0C9C59252748471E00A5BECC /* TextureFragmentShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C9C59242748471E00A5BECC /* TextureFragmentShader.cpp */; };
+		0C5088502765234D0099D25E /* TheSwamp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C50884F2765234D0099D25E /* TheSwamp.cpp */; };
+		0C508852276524760099D25E /* TheSwampWithInstancing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C508851276524760099D25E /* TheSwampWithInstancing.cpp */; };
 		0C9C592827484D2100A5BECC /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C9C592727484D2100A5BECC /* AVKit.framework */; };
 		0C9C5929274850A700A5BECC /* stb_image.h in Sources */ = {isa = PBXBuildFile; fileRef = 0C9C59212748242300A5BECC /* stb_image.h */; };
 		0CA108D7271C775300C9E3DB /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0CA108D6271C775300C9E3DB /* main.cpp */; };
-		0CD27542271CFB9D005696CC /* backup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0CD27541271CFB9D005696CC /* backup.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,13 +27,19 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0C508843276521C20099D25E /* ground2.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ground2.jpeg; sourceTree = "<group>"; };
+		0C508844276521C20099D25E /* Ground_Soil.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Ground_Soil.png; sourceTree = "<group>"; };
+		0C508845276521C20099D25E /* Gator.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = Gator.jpg; sourceTree = "<group>"; };
+		0C508846276521C20099D25E /* Grass_new.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Grass_new.png; sourceTree = "<group>"; };
+		0C508847276521C20099D25E /* grass.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = grass.png; sourceTree = "<group>"; };
+		0C50884E276522C30099D25E /* skybox */ = {isa = PBXFileReference; lastKnownFileType = folder; path = skybox; sourceTree = "<group>"; };
+		0C50884F2765234D0099D25E /* TheSwamp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TheSwamp.cpp; sourceTree = "<group>"; };
+		0C508851276524760099D25E /* TheSwampWithInstancing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TheSwampWithInstancing.cpp; sourceTree = "<group>"; };
+		0C7076C027595013006EB80F /* shader_m.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = shader_m.h; sourceTree = "<group>"; };
 		0C9C59212748242300A5BECC /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
-		0C9C59222748470C00A5BECC /* TextureVertexShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TextureVertexShader.cpp; sourceTree = "<group>"; };
-		0C9C59242748471E00A5BECC /* TextureFragmentShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TextureFragmentShader.cpp; sourceTree = "<group>"; };
 		0C9C592727484D2100A5BECC /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		0CA108D3271C775300C9E3DB /* Assignment3 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Assignment3; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CA108D6271C775300C9E3DB /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		0CD27541271CFB9D005696CC /* backup.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = backup.cpp; path = Assignment3/backup.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,7 +65,6 @@
 		0CA108CA271C775300C9E3DB = {
 			isa = PBXGroup;
 			children = (
-				0CD27541271CFB9D005696CC /* backup.cpp */,
 				0CA108D5271C775300C9E3DB /* Assignment3 */,
 				0CA108D4271C775300C9E3DB /* Products */,
 				0C9C592627484D2000A5BECC /* Frameworks */,
@@ -78,9 +82,16 @@
 		0CA108D5271C775300C9E3DB /* Assignment3 */ = {
 			isa = PBXGroup;
 			children = (
+				0C508851276524760099D25E /* TheSwampWithInstancing.cpp */,
+				0C50884F2765234D0099D25E /* TheSwamp.cpp */,
+				0C50884E276522C30099D25E /* skybox */,
+				0C508845276521C20099D25E /* Gator.jpg */,
+				0C508846276521C20099D25E /* Grass_new.png */,
+				0C508847276521C20099D25E /* grass.png */,
+				0C508844276521C20099D25E /* Ground_Soil.png */,
+				0C508843276521C20099D25E /* ground2.jpeg */,
 				0CA108D6271C775300C9E3DB /* main.cpp */,
-				0C9C59222748470C00A5BECC /* TextureVertexShader.cpp */,
-				0C9C59242748471E00A5BECC /* TextureFragmentShader.cpp */,
+				0C7076C027595013006EB80F /* shader_m.h */,
 				0C9C59212748242300A5BECC /* stb_image.h */,
 			);
 			path = Assignment3;
@@ -143,11 +154,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0C508852276524760099D25E /* TheSwampWithInstancing.cpp in Sources */,
 				0C9C5929274850A700A5BECC /* stb_image.h in Sources */,
+				0C5088502765234D0099D25E /* TheSwamp.cpp in Sources */,
 				0CA108D7271C775300C9E3DB /* main.cpp in Sources */,
-				0C9C59232748470C00A5BECC /* TextureVertexShader.cpp in Sources */,
-				0C9C59252748471E00A5BECC /* TextureFragmentShader.cpp in Sources */,
-				0CD27542271CFB9D005696CC /* backup.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
