@@ -6,6 +6,9 @@ Name: Sheela Rani Ippili, Ben Rheault
 
 This project aims at creating an environment called "GatorLand" by implementing different Graphics techniques using C++, OpenGL and Maya.
 
+## Demo
+![demo](https://github.com/sheelaippili/CAP5705_Computer_Graphics_FinalProject/blob/main/TheSwamp_AdobeExpress.gif)
+
 ## Prerequisites
 Environment: MacOS, Bigsur 11.5.2 
 XCode: Version 12.5.1
