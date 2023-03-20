@@ -1,11 +1,10 @@
 #  Project Details
 Course: CAP5705-3789(11514) – CG\
 Name: Sheela Rani Ippili, Ben Rheault\
-UFID: 2995-0862, 2351-1481
 
 ## Introduction
 
-This project aims at creating an environment called "GatorLand" by implementing different Graphics techniques using openGL.
+This project aims at creating an environment called "GatorLand" by implementing different Graphics techniques using C++, OpenGL and Maya.
 
 ## Prerequisites
 Environment: MacOS, Bigsur 11.5.2 
@@ -18,7 +17,6 @@ XCode: Version 12.5.1
 - GLM
 
 ## Executing the assignment
-- Open **FinalProject** folder.
 - There is one C++ file called **TheSwamp.cpp** which has all the functionalities implemented.
 - Run the below command and add the path of Assignment3 folder to direct to the home directory.
 ```
