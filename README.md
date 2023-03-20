@@ -1,6 +1,6 @@
 #  Project Details
-Course: CAP5705-3789(11514) – CG\
-Name: Sheela Rani Ippili, Ben Rheault\
+Course: CAP5705-3789(11514) – CG
+Name: Sheela Rani Ippili, Ben Rheault
 
 ## Introduction
 
